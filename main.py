@@ -1,7 +1,6 @@
 from endpoints import login_to_auca, download_transcript
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.responses import FileResponse, Response
-# from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -39,9 +38,12 @@ async def get_file(credentials: UserCredentials):
 
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to retrieve the PDF. Here is the partial response: {
-                    partial_response}"
+                detail=(
+                    f"Failed to retrieve the PDF. Here is the partial response: "
+                    f"{partial_response}"
+                )
             )
+
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 if __name__ == "__main__":

@@ -79,8 +79,13 @@ async def download_transcript(session_id: str):
             # return "PDF saved as transcript.pdf"
         else:
             # Throw an HTTPException if the response is not a PDF
+            content_type_message = "Expected a PDF but received a response with Content-Type: {}.".format(
+                content_type)
+            partial_response_message = "Here is the partial response: {}.".format(
+                response.text[:500])
+
             raise HTTPException(
                 status_code=500,
-                detail=f"Expected a PDF but received a response with Content-Type: {
-                    content_type}. Here is the partial response: {response.text[:500]}"
+                detail="{} {}".format(
+                    content_type_message, partial_response_message)
             )

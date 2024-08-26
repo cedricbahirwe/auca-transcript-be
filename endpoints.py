@@ -1,5 +1,13 @@
 import httpx
+from httpx import Response
 from fastapi import HTTPException
+
+
+# Check if the new page response has a redirect
+# This is Equivalent to know if the user was authenticated successfully
+# Because 200 status code is returned even for failures
+def is_login_successful(response: Response):
+    return response.is_redirect and response.has_redirect_location
 
 
 async def login_to_auca(username: str, password: str):
@@ -23,22 +31,29 @@ async def login_to_auca(username: str, password: str):
         'btnLogin': 'Sign In'
     }
 
-    async with httpx.AsyncClient(verify=False) as client:
+    async with httpx.AsyncClient(verify=False, follow_redirects=False, max_redirects=0) as client:
         response = await client.post(url, headers=headers, data=data)
 
-        # Extract cookies from the response
-        cookies = client.cookies.jar
+        if is_login_successful(response):
+            # Extract cookies from the response
+            cookies = client.cookies.jar
 
-        # Look for the ASP.NET_SessionId cookie
-        session_id = client.cookies.get('ASP.NET_SessionId')
+            # Look for the ASP.NET_SessionId cookie
+            session_id = client.cookies.get('ASP.NET_SessionId')
 
-        # Return the response text, cookies, and the session ID
-        return {
-            "status_code": response.status_code,
-            "response_text": response.text,
-            "cookies": cookies,
-            "session_id": session_id
-        }
+            # Return the response text, cookies, and the session ID
+            return {
+                "status_code": response.status_code,
+                "response_text": response.text,
+                "cookies": cookies,
+                "session_id": session_id
+            }
+        else:
+            raise HTTPException(status_code=401, detail={
+                "message": "Invalid credentials",
+                "hint": "Please double-check your username and password",
+                "status_code": 401
+            })
 
 
 async def download_transcript(session_id: str):

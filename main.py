@@ -11,16 +11,16 @@ class UserCredentials(BaseModel):
     password: str
 
 
-def authenticate_user(credentials: UserCredentials):
+def is_user_valid(credentials: UserCredentials):
     # Basic username and password check (customize this logic)
-    if credentials.username == "23455" and credentials.password == "cedricaganzelucie":
-        return True
-    return False
+    # if credentials.username == "23455" and credentials.password == "cedricaganzelucie":
+    #     return True
+    return True
 
 
 @app.post("/get-transcript/")
 async def get_file(credentials: UserCredentials):
-    if authenticate_user(credentials):
+    if is_user_valid(credentials):
         response = await login_to_auca(credentials.username, credentials.password)
         session_id = str(response.get("session_id"))
         file_response = await download_transcript(session_id)

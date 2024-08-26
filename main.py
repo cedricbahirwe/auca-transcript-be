@@ -38,10 +38,10 @@ async def get_file(credentials: UserCredentials):
 
             raise HTTPException(
                 status_code=500,
-                detail=(
-                    f"Failed to retrieve the PDF. Here is the partial response: "
+                detail=({
+                    "message": f"Failed to retrieve the PDF. Here is the partial response: "
                     f"{partial_response}"
-                )
+                })
             )
 
     raise HTTPException(status_code=401, detail="Invalid credentials")

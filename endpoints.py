@@ -1,13 +1,17 @@
 import httpx
 from httpx import Response
 from fastapi import HTTPException
-
+from bs4 import BeautifulSoup
 
 # Check if the new page response has a redirect
 # This is Equivalent to know if the user was authenticated successfully
 # Because 200 status code is returned even for failures
+
+
 def is_login_successful(response: Response):
-    if "/AddEmail.aspx" in response.text:
+    if "/StudentHome.aspx" in response.text:
+        return True
+    elif "/AddEmail.aspx" in response.text:
         raise HTTPException(status_code=401, detail={
             "message": "Please go to the website and enter your email, then try again.",
             "hint": "Email Address Missing",
@@ -39,9 +43,6 @@ async def login_to_auca(username: str, password: str):
 
     async with httpx.AsyncClient(verify=False, follow_redirects=False, max_redirects=0) as client:
         response = await client.post(url, headers=headers, data=data)
-        print("Res")
-        print("/AddEmail.aspx" in response.text)
-        print(response.text)
         if is_login_successful(response):
             # Extract cookies from the response
             cookies = client.cookies.jar
@@ -57,9 +58,22 @@ async def login_to_auca(username: str, password: str):
                 "session_id": session_id
             }
         else:
+            # Parse the HTML
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Find the element by id = lblLoginMessage and get its text
+            # From tests, this seems to be the element with descriptive message
+            element = soup.find(id="lblLoginMessage")
+
+            # Check if the element exists before trying to get the text
+            if element is not None:
+                error_message = element.get_text()
+            else:
+                error_message = "Invalid credentials",
+
             raise HTTPException(status_code=401, detail={
-                "message": "Invalid credentials",
-                "hint": "Please double-check your username and password",
+                "message": error_message,
+                "hint": "Make sure you can login on the website and try again",
                 "status_code": 401
             })
 

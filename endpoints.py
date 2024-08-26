@@ -7,6 +7,12 @@ from fastapi import HTTPException
 # This is Equivalent to know if the user was authenticated successfully
 # Because 200 status code is returned even for failures
 def is_login_successful(response: Response):
+    if "/AddEmail.aspx" in response.text:
+        raise HTTPException(status_code=401, detail={
+            "message": "Please go to the website and enter your email, then try again.",
+            "hint": "Email Address Missing",
+            "status_code": 401
+        })
     return response.is_redirect and response.has_redirect_location
 
 
@@ -33,7 +39,9 @@ async def login_to_auca(username: str, password: str):
 
     async with httpx.AsyncClient(verify=False, follow_redirects=False, max_redirects=0) as client:
         response = await client.post(url, headers=headers, data=data)
-
+        print("Res")
+        print("/AddEmail.aspx" in response.text)
+        print(response.text)
         if is_login_successful(response):
             # Extract cookies from the response
             cookies = client.cookies.jar
